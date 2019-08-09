@@ -1,2 +1,2 @@
 # fs_cell_auto
-A simple python cellular automata implemented in python
+A simple cellular automata program implemented in python.
