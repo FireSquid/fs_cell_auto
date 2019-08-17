@@ -41,7 +41,7 @@ camera_pos = Vector2([0, 0])
 camera_scale = 0
 
 # initialize a Cell_State
-cell_state = Cell_State([Vector2(0,0)])
+cell_state = Cell_State([])
 
 # used for manual stepping
 step_mode = True
@@ -67,12 +67,15 @@ while True:
 
         # key events
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_s:     # manual step through the simulation
+            if event.key == pygame.K_s:     # step through the simulation, also stops the simulation from running automatically
                 step_mode = True
                 cell_state.update_state()
             if event.key == pygame.K_r:     # return to automatic updates
                 step_mode = False
-
+            if event.key == pygame.K_c:     # clear all cells
+                camera_pos = Vector2(0,0)
+                step_mode = True
+                cell_state.clear_cells()
             if event.key == pygame.K_UP:       # Zoom in
                 camera_scale -= 0.25
             if event.key == pygame.K_DOWN:      # Zoom out

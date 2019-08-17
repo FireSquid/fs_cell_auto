@@ -29,13 +29,18 @@ class Cell_State:
     def add_cells(self, cells):
         for cell in cells:
             self.state[tuple(cell.xy)] = True
-            
+
 
     # remove a list of cells
     def remove_cells(self, cells):
         for cell in cells:
             if tuple(cell.xy) in self.state:
                 del self.state[tuple(cell.xy)]
+
+
+    # clear all cells
+    def clear_cells(self):
+        self.state = {}
 
 
     # iterate the cellular automata simulation 1 step
