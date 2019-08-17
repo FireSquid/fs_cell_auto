@@ -7,18 +7,16 @@
 
 
 # import necessary modules
-import pygame
-
-# add two positions together
-def add_positions(pos1, pos2):
-    return (pos1[0] + pos2[0], pos1[1] + pos2[1])
+import pygame, math
+from pygame import Vector2
 
 
 # class containing the state of the cellular automata simulation
 class Cell_State:
 
     # tuple of relative positions of neigbor cells
-    NEIGHBOR_POSITIONS = ((0,1), (1,1), (1,0), (1,-1), (0,-1), (-1,-1), (-1,0), (-1,1))
+    NEIGHBOR_POSITIONS = (  Vector2([0,1]), Vector2([1,1]), Vector2([1,0]), Vector2([1,-1]),
+                            Vector2([0,-1]), Vector2([-1,-1]), Vector2([-1,0]), Vector2([-1,1]))
 
     # constructor
     def __init__(self, initial_cells):
@@ -30,13 +28,15 @@ class Cell_State:
     # add a list of cells to the state
     def add_cells(self, cells):
         for cell in cells:
-            self.state[cell] = True
+            self.state[tuple(cell.xy)] = True
+            
 
     # remove a list of cells
     def remove_cells(self, cells):
         for cell in cells:
-            if cell in self.state:
-                del self.state[cell]
+            if tuple(cell.xy) in self.state:
+                del self.state[tuple(cell.xy)]
+
 
     # iterate the cellular automata simulation 1 step
     def update_state(self):
@@ -51,7 +51,7 @@ class Cell_State:
             for pos in Cell_State.NEIGHBOR_POSITIONS:
 
                 # current position being checked
-                check_pos = add_positions(cell, pos)
+                check_pos = tuple((cell + pos).xy)
 
                 if check_pos in neighbor_counts:      # increment the neighbor count
                     neighbor_counts[check_pos] += 1
@@ -62,22 +62,24 @@ class Cell_State:
         for cell in neighbor_counts:
 
             # apply rules for Conway's Game of Life (2 or 3 neighbors = survive, 3 neighbors = create, other = die)
-            if neighbor_counts[cell] == 3 or (neighbor_counts[cell] == 2 and cell in self.state and self.state[cell]):
+            if neighbor_counts[cell] == 3 or (neighbor_counts[cell] == 2 and (cell in self.state and self.state[cell])):
                 new_state[cell] = True
 
         # set the state to the new state
         self.state = new_state
 
-        # pring debug information
-        print(f" - Frame {self.frame} - ")
-        print(f" - neighbor_counts  : {neighbor_counts}")
-        print(f" - new_state        : {new_state}")
 
     # draw the current state using pygame relative to camera_pos
-    def draw_state(self, screen, camera_pos):
+    def draw_state(self, screen, camera_pos, camera_scale, view_size):
+
+        # positional offset of the top right corner of the screen relative to the origin
+        screen_origin = camera_pos / camera_scale - 0.5 * view_size
+
+        # calculate the pixel size of each cell relative to the camera's scale
+        cell_size = 16 / camera_scale
 
         # draw each cell
         for cell in self.state:
 
-            # draw a green 14x14 rectangle centered in a 16x16 tile
-            pygame.draw.rect(screen, (0, 175, 0), pygame.Rect(cell[0]*16 + 1 + camera_pos[0], cell[1]*16 + 1 + camera_pos[1], 14, 14))
+            # draw a green square
+            pygame.draw.rect(screen, (0, 175, 0), pygame.Rect((Vector2(cell) * cell_size - screen_origin).xy, [cell_size, cell_size]))
