@@ -28,8 +28,13 @@ class Cell_State:
     # add a list of cells to the state
     def add_cells(self, cells):
         for cell in cells:
-            self.state[tuple(cell.xy)] = True
+            self.state[cell] = True
 
+
+    # add a list of vectors to the state
+    def add_cells_v(self, cells):
+        for cell in cells:
+            self.state[tuple(cell.xy)] = True
 
     # remove a list of cells
     def remove_cells(self, cells):
@@ -41,6 +46,63 @@ class Cell_State:
     # clear all cells
     def clear_cells(self):
         self.state = {}
+
+
+    # convert cell_state to a string that can be saved to a file
+    def serialize_cells(self):
+
+        serialization = ""
+
+        # a dictionary containing lists of active cells in all rows that contain active cells
+        rows = {}
+
+        # iterate through all the cells
+        for cell in self.state:
+            if not cell[1] in rows:
+                rows[cell[1]] = []
+            # add active cell to the row
+            rows[cell[1]].append((cell[0], 1))
+
+        # add each row to the serialization
+        for row in rows:
+
+            # format:  R(row1_height)=(cell1_X):(cell1_state)|(cell2_X):(cell2_state)...|(cellN_X):(cellN_state)R(row2_height)...
+            serialization += f"R{int(row)}=" + "|".join([":".join([str(int(data)) for data in cell]) for cell in rows[row]])
+
+        print(serialization)
+
+        return serialization
+
+    # convert saved string back into the cell_state
+    def deserialize_cells(self, serialization):
+
+        parsed_cells = []
+
+        # split the input string into separate rows
+        rows = serialization.split("R")[1:]
+
+        # iterate through each row
+        for row in rows:
+
+            print(f"Row = {row}")
+
+            row_parts = row.split("=")
+
+            print(f" - RowParts = {row_parts}")
+
+            cells = row_parts[1].split("|")
+
+            for cell in cells:
+
+                cell_data = cell.split(":")
+
+                # added parsed cell to the list
+                parsed_cells.append((int(cell_data[0]), int(row_parts[0])))
+
+        self.clear_cells()
+
+        self.add_cells(parsed_cells)
+
 
 
     # iterate the cellular automata simulation 1 step

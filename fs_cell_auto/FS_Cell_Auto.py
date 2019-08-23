@@ -7,7 +7,7 @@
 
 
 # import necessary modules
-import pygame, sys, math
+import pygame, sys, math, easygui
 from Cell_State import Cell_State
 from pygame import Vector2
 
@@ -15,6 +15,30 @@ from pygame import Vector2
 # convert the camera scale from linear to exponential
 def real_scale(scale):
     return math.exp(scale)
+
+
+# load a .fsca file into the cell state
+def load_file(cell_state, filename):
+    # open file for writing
+    file = open(f"{filename}", "r")
+    # read the file
+    load_string = file.read()
+    # close the file
+    file.close()
+    # parse the string
+    cell_state.deserialize_cells(load_string)
+
+
+# save the cell state into an .fsca file
+def save_file(cell_state, filename):
+    # get the serialized string of the state
+    save_string = cell_state.serialize_cells()
+    # open file for writing
+    file = open(f"{filename}.fsca", "w")
+    # write string to the file
+    file.write(save_string)
+    # close the file
+    file.close()
 
 
 # initialize pygame
@@ -76,6 +100,14 @@ while True:
                 camera_pos = Vector2(0,0)
                 step_mode = True
                 cell_state.clear_cells()
+            if event.key == pygame.K_i:     # open a file (import)
+                step_mode = True
+                filename = easygui.fileopenbox(msg="Select File", default="./Saves/", filetypes="*.fsca")
+                load_file(cell_state, filename)
+            if event.key == pygame.K_e:     # save to file (export)
+                step_mode = True
+                filename = easygui.filesavebox(msg="Save to a file", default="./Saves/Savefile", filetypes="*.fsca")
+                save_file(cell_state, filename)
             if event.key == pygame.K_UP:       # Zoom in
                 camera_scale -= 0.25
             if event.key == pygame.K_DOWN:      # Zoom out
@@ -102,7 +134,7 @@ while True:
     if mouse_held[0]:
 
         # create a cell
-        cell_state.add_cells([mouse_cell])
+        cell_state.add_cells_v([mouse_cell])
 
     # right mouse button held
     elif mouse_held[2]:
