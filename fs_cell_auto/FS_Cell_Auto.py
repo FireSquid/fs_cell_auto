@@ -146,16 +146,20 @@ while True:
     # middle mouse button held
     if mouse_held[1]:
 
-        # move the camera
+        # get the position of the mouse
         mouse_pos = Vector2(pygame.mouse.get_pos())
 
+        # set the last mouse position to the current position if it wasn't already set to prevent the view from jumping
         if not last_mouse_pos:
             last_mouse_pos = mouse_pos
 
+        # move the camera position based on the difference between the current mouse position and the previous mouse position
         camera_pos = camera_pos - (mouse_pos - last_mouse_pos) * real_scale(camera_scale)
 
         last_mouse_pos = mouse_pos
+
     else:
+        # reset the last mouse position
         last_mouse_pos = False
 
 
