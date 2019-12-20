@@ -9,12 +9,12 @@
 # import necessary modules
 import pygame, math
 from pygame import Vector2
+from Rule import Rule
 
 
 # class containing the state of the cellular automata simulation
 class Cell_State:
 
-    # tuple of relative positions of neigbor cells
     NEIGHBOR_POSITIONS = (  Vector2([0,1]), Vector2([1,1]), Vector2([1,0]), Vector2([1,-1]),
                             Vector2([0,-1]), Vector2([-1,-1]), Vector2([-1,0]), Vector2([-1,1]))
 
@@ -23,6 +23,15 @@ class Cell_State:
         self.state = {}         # dictionary containing which cells are active (key = (int(x_pos), int(y_pos): value = bool(active))
         self.add_cells(initial_cells)   # initialize the state
         self.frame = 0
+
+        # creates a rule to test functionality
+        test_cell_change_rule = {}
+
+        # set conditions required to change to a new state
+        test_cell_change_rule[False] = {True : (3,)}                     # move from inactive to active
+        test_cell_change_rule[True] = {False : (0, 1, 4, 5, 6, 7, 8)}   # move from active to inactive
+
+        self.rule = Rule(test_cell_change_rule)
 
 
     # add a list of cells to the state
@@ -114,6 +123,9 @@ class Cell_State:
         # loop through each active cell in the current state
         for cell in self.state:
 
+            if not cell in neighbor_counts:
+                neighbor_counts[cell] = 0
+
             # add one to the neighbors of the current active cell
             for pos in Cell_State.NEIGHBOR_POSITIONS:
 
@@ -125,12 +137,13 @@ class Cell_State:
                 else:                           # set neighbor count to 1 if it hasn't been added yet
                     neighbor_counts[check_pos] = 1
 
-        # loop through the neighbor poitions
+        # loop through the cells with adjacent active cells
         for cell in neighbor_counts:
 
-            # apply rules for Conway's Game of Life (2 or 3 neighbors = survive, 3 neighbors = create, other = die)
-            if neighbor_counts[cell] == 3 or (neighbor_counts[cell] == 2 and (cell in self.state and self.state[cell])):
-                new_state[cell] = True
+            new_state[cell] = self.rule.check_rules(cell, self.state, neighbor_counts)
+
+            if not new_state[cell]:
+                del new_state[cell]
 
         # set the state to the new state
         self.state = new_state
