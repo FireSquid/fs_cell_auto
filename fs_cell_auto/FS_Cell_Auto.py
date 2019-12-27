@@ -64,8 +64,11 @@ camera_pos = Vector2([0, 0])
 # scale of the camera
 camera_scale = 0
 
+cell_colors = {1 : (0, 175, 0), 2 : (175, 0, 0), 3 : (0, 0, 175)}
 # initialize a Cell_State
-cell_state = Cell_State([])
+cell_state = Cell_State(cell_colors)
+
+selected_state = 1
 
 # used for manual stepping
 step_mode = True
@@ -112,6 +115,10 @@ while True:
                 camera_scale -= 0.25
             if event.key == pygame.K_DOWN:      # Zoom out
                 camera_scale += 0.25
+            if event.key == pygame.K_y:
+                selected_state += 1
+                if selected_state > len(cell_colors):
+                    selected_state = 1
 
         # mouse events
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -134,7 +141,7 @@ while True:
     if mouse_held[0]:
 
         # create a cell
-        cell_state.add_cells_v([mouse_cell])
+        cell_state.add_cells_v(selected_state, [mouse_cell])
 
     # right mouse button held
     elif mouse_held[2]:
@@ -168,6 +175,10 @@ while True:
 
     # draw the Cell_State
     cell_state.draw_state(screen, camera_pos, real_scale(camera_scale), screen_size)
+
+    # show the currently selected cell state that will be added by clicking
+    pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(10, 10, 40, 40))
+    pygame.draw.rect(screen, cell_colors[selected_state], pygame.Rect(15, 15, 30, 30))
 
     # set the framerate
     clock.tick(framerate)

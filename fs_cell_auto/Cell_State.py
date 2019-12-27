@@ -19,31 +19,35 @@ class Cell_State:
                             Vector2([0,-1]), Vector2([-1,-1]), Vector2([-1,0]), Vector2([-1,1]))
 
     # constructor
-    def __init__(self, initial_cells):
+    def __init__(self, state_colors):
         self.state = {}         # dictionary containing which cells are active (key = (int(x_pos), int(y_pos): value = bool(active))
-        self.add_cells(initial_cells)   # initialize the state
         self.frame = 0
+
+        # color of each active cell
+        self.state_colors = state_colors
 
         # creates a rule to test functionality
         test_cell_change_rule = {}
 
         # set conditions required to change to a new state
-        test_cell_change_rule[False] = {True : (3,)}                     # move from inactive to active
-        test_cell_change_rule[True] = {False : (0, 1, 4, 5, 6, 7, 8)}   # move from active to inactive
+        test_cell_change_rule[0] = {1 : (3,)}           # move from inactive to active
+        test_cell_change_rule[1] = {2: (2,), 0 : (0, 1, 4, 5, 6, 7, 8)}   # move from active to inactive
+        test_cell_change_rule[2] = {3: (2,), 0 : (0, 1, 4, 5, 6, 7, 8)}
+        test_cell_change_rule[3] = {1: (2,), 0 : (0, 1, 4, 5, 6, 7, 8)}
 
         self.rule = Rule(test_cell_change_rule)
 
 
     # add a list of cells to the state
-    def add_cells(self, cells):
+    def add_cells(self, state, cells):
         for cell in cells:
-            self.state[cell] = True
+            self.state[cell] = state
 
 
     # add a list of vectors to the state
-    def add_cells_v(self, cells):
+    def add_cells_v(self, state, cells):
         for cell in cells:
-            self.state[tuple(cell.xy)] = True
+            self.state[tuple(cell.xy)] = state
 
     # remove a list of cells
     def remove_cells(self, cells):
@@ -93,11 +97,11 @@ class Cell_State:
         # iterate through each row
         for row in rows:
 
-            print(f"Row = {row}")
+            #print(f"Row = {row}")
 
             row_parts = row.split("=")
 
-            print(f" - RowParts = {row_parts}")
+            #print(f" - RowParts = {row_parts}")
 
             cells = row_parts[1].split("|")
 
@@ -110,7 +114,7 @@ class Cell_State:
 
         self.clear_cells()
 
-        self.add_cells(parsed_cells)
+        self.add_cells(1, parsed_cells)
 
 
 
@@ -132,9 +136,9 @@ class Cell_State:
                 # current position being checked
                 check_pos = tuple((cell + pos).xy)
 
-                if check_pos in neighbor_counts:      # increment the neighbor count
+                if check_pos in neighbor_counts:    # increment the neighbor count
                     neighbor_counts[check_pos] += 1
-                else:                           # set neighbor count to 1 if it hasn't been added yet
+                else:                               # set neighbor count to 1 if it hasn't been added yet
                     neighbor_counts[check_pos] = 1
 
         # loop through the cells with adjacent active cells
@@ -161,5 +165,5 @@ class Cell_State:
         # draw each cell
         for cell in self.state:
 
-            # draw a green square
-            pygame.draw.rect(screen, (0, 175, 0), pygame.Rect((Vector2(cell) * cell_size - screen_origin).xy, [cell_size, cell_size]))
+            # draw a square for each active cell
+            pygame.draw.rect(screen, self.state_colors[self.state[cell]], pygame.Rect((Vector2(cell) * cell_size - screen_origin).xy, [cell_size, cell_size]))
