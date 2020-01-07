@@ -74,7 +74,7 @@ class Cell_State:
             if not cell[1] in rows:
                 rows[cell[1]] = []
             # add active cell to the row
-            rows[cell[1]].append((cell[0], 1))
+            rows[cell[1]].append((cell[0], self.state[cell]))
 
         # add each row to the serialization
         for row in rows:
@@ -89,7 +89,7 @@ class Cell_State:
     # convert saved string back into the cell_state
     def deserialize_cells(self, serialization):
 
-        parsed_cells = []
+        parsed_cells = {}
 
         # split the input string into separate rows
         rows = serialization.split("R")[1:]
@@ -109,12 +109,19 @@ class Cell_State:
 
                 cell_data = cell.split(":")
 
+                cell_type = int(cell_data[1])
+
+                # add new cell type if it is not already retrieved
+                if cell_type not in parsed_cells:
+                    parsed_cells[cell_type] = []
+
                 # added parsed cell to the list
-                parsed_cells.append((int(cell_data[0]), int(row_parts[0])))
+                parsed_cells[cell_type].append((int(cell_data[0]), int(row_parts[0])))
 
         self.clear_cells()
 
-        self.add_cells(1, parsed_cells)
+        for cell_type in parsed_cells:
+            self.add_cells(cell_type, parsed_cells[cell_type])
 
 
 
@@ -169,6 +176,6 @@ class Cell_State:
 
         # draw each cell
         for cell in self.state:
-
+            
             # draw a square for each active cell
             pygame.draw.rect(screen, self.state_colors[self.state[cell]], pygame.Rect((Vector2(cell) * cell_size - screen_origin).xy, [cell_size, cell_size]))
