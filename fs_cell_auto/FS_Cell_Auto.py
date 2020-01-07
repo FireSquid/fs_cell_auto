@@ -19,8 +19,18 @@ def real_scale(scale):
 
 # load a .fsca file into the cell state
 def load_file(cell_state, filename):
-    # open file for writing
-    file = open(f"{filename}", "r")
+
+    if filename == None:
+        print("No file selected for loading")
+        return
+
+    try:
+        # open file for writing
+        file = open(f"{filename}", "r")
+    except Exception as ex:
+        # print exception if file fails to open
+        print(ex)
+
     # read the file
     load_string = file.read()
     # close the file
@@ -31,10 +41,23 @@ def load_file(cell_state, filename):
 
 # save the cell state into an .fsca file
 def save_file(cell_state, filename):
+
+    if not filename.endswith(".fsca"):
+        filename += ".fsca"
+    # remove any excess filename extenstions
+    while filename.endswith(".fsca.fsca"):
+        filename = filename[:-5]
+
     # get the serialized string of the state
     save_string = cell_state.serialize_cells()
-    # open file for writing
-    file = open(f"{filename}.fsca", "w")
+
+    try:
+        # open file for writing
+        file = open(f"{filename}", "w")
+    except Exception as ex:
+        # print exception if file fails to open
+        print(ex)
+
     # write string to the file
     file.write(save_string)
     # close the file
