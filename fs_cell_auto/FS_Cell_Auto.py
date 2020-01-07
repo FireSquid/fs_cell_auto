@@ -64,7 +64,7 @@ camera_pos = Vector2([0, 0])
 # scale of the camera
 camera_scale = 0
 
-cell_colors = {1 : (0, 175, 0), 2 : (175, 0, 0), 3 : (0, 0, 175)}
+cell_colors = {1 : (255, 127, 0), 2 : (125, 125, 255), 3 : (240, 240, 240)}
 # initialize a Cell_State
 cell_state = Cell_State(cell_colors)
 

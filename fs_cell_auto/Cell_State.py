@@ -29,11 +29,11 @@ class Cell_State:
         # creates a rule to test functionality
         test_cell_change_rule = {}
 
-        # set conditions required to change to a new state
-        test_cell_change_rule[0] = {1 : (3,)}           # move from inactive to active
-        test_cell_change_rule[1] = {2: (2,), 0 : (0, 1, 4, 5, 6, 7, 8)}   # move from active to inactive
-        test_cell_change_rule[2] = {3: (2,), 0 : (0, 1, 4, 5, 6, 7, 8)}
-        test_cell_change_rule[3] = {1: (2,), 0 : (0, 1, 4, 5, 6, 7, 8)}
+        # Rules for Wireworld
+        test_cell_change_rule[0] = {}
+        test_cell_change_rule[1] = {2 : { 2 : {1, 2} }}
+        test_cell_change_rule[2] = {3 : {}}
+        test_cell_change_rule[3] = {1 : { 1 : {1, 2, 3, 4, 5, 6, 7, 8} }}
 
         self.rule = Rule(test_cell_change_rule)
 
@@ -127,8 +127,8 @@ class Cell_State:
         # loop through each active cell in the current state
         for cell in self.state:
 
-            if not cell in neighbor_counts:
-                neighbor_counts[cell] = 0
+            if cell not in neighbor_counts:
+                neighbor_counts[cell] = {}
 
             # add one to the neighbors of the current active cell
             for pos in Cell_State.NEIGHBOR_POSITIONS:
@@ -136,21 +136,26 @@ class Cell_State:
                 # current position being checked
                 check_pos = tuple((cell + pos).xy)
 
-                if check_pos in neighbor_counts:    # increment the neighbor count
-                    neighbor_counts[check_pos] += 1
-                else:                               # set neighbor count to 1 if it hasn't been added yet
-                    neighbor_counts[check_pos] = 1
+                if check_pos not in neighbor_counts:                        # initialize neighbor counts at check_pos
+                    neighbor_counts[check_pos] = {self.get_state_of_cell(cell) : 1}
+                elif self.state[cell] not in neighbor_counts[check_pos]:    # add a neighbor count to check_pos
+                    neighbor_counts[check_pos][self.get_state_of_cell(cell)] = 1
+                else:                                                       # increment the neighbor count
+                    neighbor_counts[check_pos][self.get_state_of_cell(cell)] += 1
 
         # loop through the cells with adjacent active cells
         for cell in neighbor_counts:
 
-            new_state[cell] = self.rule.check_rules(cell, self.state, neighbor_counts)
+            new_state[cell] = self.rule.check_rules(cell, self, neighbor_counts)
 
             if not new_state[cell]:
                 del new_state[cell]
 
         # set the state to the new state
         self.state = new_state
+
+    def get_state_of_cell(self, cell):
+        return self.state[cell] if cell in self.state else 0
 
 
     # draw the current state using pygame relative to camera_pos

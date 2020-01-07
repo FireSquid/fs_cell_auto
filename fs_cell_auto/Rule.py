@@ -13,7 +13,8 @@ from pygame import Vector2
 
 
 # Cell_change_rule:
-#   * {current_state : {next_state : (neighbor_counts)}, {next_state : (neighbor_counts)}, ...}
+#   * {current_state : {next_state : {adj_state : count required, adj_state : count required, ...}},
+#                       {next_state : {adj_state : count required, adj_state : count required, ...}}, ...}
 #   * earlier rules take precedence
 
 class Rule:
@@ -26,12 +27,24 @@ class Rule:
     def check_rules(self, cell, cell_state, cell_neighbors):
 
         # loop through each of the next possible states in the rule
-        for next_state in self.cell_change_rules[cell_state[cell] if cell in cell_state else 0]:
+        for next_state in self.cell_change_rules[cell_state.get_state_of_cell(cell)]:
 
-            # check for the matching number of active neighbors
-            if cell_neighbors[cell] in (self.cell_change_rules[cell_state[cell] if cell in cell_state else 0][next_state]):
+            conditions_met = True;
 
-                # return the next state
+            if len(self.cell_change_rules[cell_state.get_state_of_cell(cell)][next_state]) > 0:
+                # check if all the conditions are met for changing to the next state
+                for adj_state in self.cell_change_rules[cell_state.get_state_of_cell(cell)][next_state]:
+
+
+                    # check a condition
+                    if (cell_neighbors[cell][adj_state] if adj_state in cell_neighbors[cell] else 0) not in self.cell_change_rules[cell_state.get_state_of_cell(cell)][next_state][adj_state]:
+
+                        # a condition failed so the cell will not change to next_state
+                        conditions_met = False
+
+            # cell should change to next_state
+            if conditions_met:
                 return next_state
 
-        return cell_state[cell] if cell in cell_state else 0
+
+        return cell_state.get_state_of_cell(cell)
