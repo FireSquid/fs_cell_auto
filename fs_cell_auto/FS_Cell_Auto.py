@@ -16,6 +16,8 @@ from pygame import Vector2
 def real_scale(scale):
     return math.exp(scale)
 
+def lerp(a, b, n):
+    return ( b - a ) * n + a
 
 # load a .fsca file into the cell state
 def load_file(cell_state, filename):
@@ -64,6 +66,12 @@ def save_file(cell_state, filename):
     file.close()
 
 
+def draw_text(surface, text, pos, color=(255,255,255), size=16):
+    text_surface = pygame.font.Font(pygame.font.match_font("liberationserif"), size).render(text, True, color)
+
+    surface.blit(text_surface, pos)
+
+
 # initialize pygame
 pygame.init()
 
@@ -100,6 +108,22 @@ step_mode = True
 mouse_held = [False, False, False]
 
 last_mouse_pos = False
+
+# list of lines of text in the help box
+help_list = ("R,- Run the simulation", "S,- Stop/Step through the simulation", "C,- Clear all active cells",
+                "E,- Save the simulation's state into a file", "I,- Load the simulation's state from a file",
+                "Y,- Cycle through available active states", "H,- Toggle the help box",
+                "LMB,- Click or drag to set cells to the selected active state",
+                "RMB,- Click or drag to set cells to inactive",
+                "MMB,- Drag to move the view around",
+                "Scroll or press the up/down arrow keys to zoom in or out")
+# is the help text being displayed
+help_active = True
+# size of the help box
+help_size = (600, (len(help_list) + 1) * 25)
+# where the help text box is located
+help_position = 1
+help_y_points = ( -help_size[1] - 20, 20 )
 
 # game loop
 while True:
@@ -138,10 +162,12 @@ while True:
                 camera_scale -= 0.25
             if event.key == pygame.K_DOWN:      # Zoom out
                 camera_scale += 0.25
-            if event.key == pygame.K_y:
+            if event.key == pygame.K_y:     # cycle through different active cell types
                 selected_state += 1
                 if selected_state > len(cell_colors):
                     selected_state = 1
+            if event.key == pygame.K_h:
+                help_active = not help_active
 
         # mouse events
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -203,8 +229,22 @@ while True:
     pygame.draw.rect(screen, (50, 50, 50), pygame.Rect(10, 10, 40, 40))
     pygame.draw.rect(screen, cell_colors[selected_state], pygame.Rect(15, 15, 30, 30))
 
-    # set the framerate
-    clock.tick(framerate)
+    help_position = lerp(help_position, int(help_active), 0.1)
+
+    # display the help box if it is on screen and active
+    if (lerp(help_y_points[0], help_y_points[1], help_position) + help_size[1] >= 0 ):
+        pygame.draw.rect(screen, (80,80,80), pygame.Rect(100, lerp(help_y_points[0], help_y_points[1], help_position), help_size[0], help_size[1]))
+
+        i = 0
+        for help_line in help_list:
+            j = 0
+            for text in help_line.split(','):
+                draw_text(screen, text, (120 + j * 45, lerp(help_y_points[0], help_y_points[1], help_position) + i*25 + 15))
+                j += 1
+            i += 1
 
     # update the screen
     pygame.display.flip()
+
+    # set the framerate
+    clock.tick(framerate)
