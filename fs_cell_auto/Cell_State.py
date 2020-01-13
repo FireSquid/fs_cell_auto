@@ -9,32 +9,45 @@
 # import necessary modules
 import pygame, math
 from pygame import Vector2
+from Rule import Rule
 
 
 # class containing the state of the cellular automata simulation
 class Cell_State:
 
-    # tuple of relative positions of neigbor cells
     NEIGHBOR_POSITIONS = (  Vector2([0,1]), Vector2([1,1]), Vector2([1,0]), Vector2([1,-1]),
                             Vector2([0,-1]), Vector2([-1,-1]), Vector2([-1,0]), Vector2([-1,1]))
 
     # constructor
-    def __init__(self, initial_cells):
+    def __init__(self, state_colors):
         self.state = {}         # dictionary containing which cells are active (key = (int(x_pos), int(y_pos): value = bool(active))
-        self.add_cells(initial_cells)   # initialize the state
         self.frame = 0
+
+        # color of each active cell
+        self.state_colors = state_colors
+
+        # creates a rule to test functionality
+        test_cell_change_rule = {}
+
+        # Rules for Wireworld
+        test_cell_change_rule[0] = {}
+        test_cell_change_rule[1] = {2 : { 2 : {1, 2} }}
+        test_cell_change_rule[2] = {3 : {}}
+        test_cell_change_rule[3] = {1 : { 1 : {1, 2, 3, 4, 5, 6, 7, 8} }}
+
+        self.rule = Rule(test_cell_change_rule)
 
 
     # add a list of cells to the state
-    def add_cells(self, cells):
+    def add_cells(self, state, cells):
         for cell in cells:
-            self.state[cell] = True
+            self.state[cell] = state
 
 
     # add a list of vectors to the state
-    def add_cells_v(self, cells):
+    def add_cells_v(self, state, cells):
         for cell in cells:
-            self.state[tuple(cell.xy)] = True
+            self.state[tuple(cell.xy)] = state
 
     # remove a list of cells
     def remove_cells(self, cells):
@@ -61,7 +74,7 @@ class Cell_State:
             if not cell[1] in rows:
                 rows[cell[1]] = []
             # add active cell to the row
-            rows[cell[1]].append((cell[0], 1))
+            rows[cell[1]].append((cell[0], self.state[cell]))
 
         # add each row to the serialization
         for row in rows:
@@ -76,7 +89,7 @@ class Cell_State:
     # convert saved string back into the cell_state
     def deserialize_cells(self, serialization):
 
-        parsed_cells = []
+        parsed_cells = {}
 
         # split the input string into separate rows
         rows = serialization.split("R")[1:]
@@ -84,11 +97,11 @@ class Cell_State:
         # iterate through each row
         for row in rows:
 
-            print(f"Row = {row}")
+            #print(f"Row = {row}")
 
             row_parts = row.split("=")
 
-            print(f" - RowParts = {row_parts}")
+            #print(f" - RowParts = {row_parts}")
 
             cells = row_parts[1].split("|")
 
@@ -96,12 +109,19 @@ class Cell_State:
 
                 cell_data = cell.split(":")
 
+                cell_type = int(cell_data[1])
+
+                # add new cell type if it is not already retrieved
+                if cell_type not in parsed_cells:
+                    parsed_cells[cell_type] = []
+
                 # added parsed cell to the list
-                parsed_cells.append((int(cell_data[0]), int(row_parts[0])))
+                parsed_cells[cell_type].append((int(cell_data[0]), int(row_parts[0])))
 
         self.clear_cells()
 
-        self.add_cells(parsed_cells)
+        for cell_type in parsed_cells:
+            self.add_cells(cell_type, parsed_cells[cell_type])
 
 
 
@@ -114,26 +134,35 @@ class Cell_State:
         # loop through each active cell in the current state
         for cell in self.state:
 
+            if cell not in neighbor_counts:
+                neighbor_counts[cell] = {}
+
             # add one to the neighbors of the current active cell
             for pos in Cell_State.NEIGHBOR_POSITIONS:
 
                 # current position being checked
                 check_pos = tuple((cell + pos).xy)
 
-                if check_pos in neighbor_counts:      # increment the neighbor count
-                    neighbor_counts[check_pos] += 1
-                else:                           # set neighbor count to 1 if it hasn't been added yet
-                    neighbor_counts[check_pos] = 1
+                if check_pos not in neighbor_counts:                        # initialize neighbor counts at check_pos
+                    neighbor_counts[check_pos] = {self.get_state_of_cell(cell) : 1}
+                elif self.state[cell] not in neighbor_counts[check_pos]:    # add a neighbor count to check_pos
+                    neighbor_counts[check_pos][self.get_state_of_cell(cell)] = 1
+                else:                                                       # increment the neighbor count
+                    neighbor_counts[check_pos][self.get_state_of_cell(cell)] += 1
 
-        # loop through the neighbor poitions
+        # loop through the cells with adjacent active cells
         for cell in neighbor_counts:
 
-            # apply rules for Conway's Game of Life (2 or 3 neighbors = survive, 3 neighbors = create, other = die)
-            if neighbor_counts[cell] == 3 or (neighbor_counts[cell] == 2 and (cell in self.state and self.state[cell])):
-                new_state[cell] = True
+            new_state[cell] = self.rule.check_rules(cell, self, neighbor_counts)
+
+            if not new_state[cell]:
+                del new_state[cell]
 
         # set the state to the new state
         self.state = new_state
+
+    def get_state_of_cell(self, cell):
+        return self.state[cell] if cell in self.state else 0
 
 
     # draw the current state using pygame relative to camera_pos
@@ -147,6 +176,6 @@ class Cell_State:
 
         # draw each cell
         for cell in self.state:
-
-            # draw a green square
-            pygame.draw.rect(screen, (0, 175, 0), pygame.Rect((Vector2(cell) * cell_size - screen_origin).xy, [cell_size, cell_size]))
+            
+            # draw a square for each active cell
+            pygame.draw.rect(screen, self.state_colors[self.state[cell]], pygame.Rect((Vector2(cell) * cell_size - screen_origin).xy, [cell_size, cell_size]))
