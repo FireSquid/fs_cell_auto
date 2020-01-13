@@ -11,3 +11,5 @@ A simple cellular automata program implemented in python.
 * rmb - set cell to inactive state
 * mmb - drag to move the view
 * scroll wheel - zoom in/out
+
+- Developed by Peter Reynolds (FireSquid)
