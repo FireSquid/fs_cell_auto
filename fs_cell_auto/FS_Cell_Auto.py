@@ -248,3 +248,6 @@ while True:
 
     # set the framerate
     clock.tick(framerate)
+
+# close python just in case
+pygame.quit()
