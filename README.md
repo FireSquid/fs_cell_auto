@@ -12,4 +12,5 @@ A simple cellular automata program implemented in python.
 * mmb - drag to move the view
 * scroll wheel - zoom in/out
 
+### Developer
 - Developed by Peter Reynolds (FireSquid)
