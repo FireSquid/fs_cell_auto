@@ -44,6 +44,10 @@ def load_file(cell_state, filename):
 # save the cell state into an .fsca file
 def save_file(cell_state, filename):
 
+    if filename == None:
+        print("No file selected for saving")
+        return
+
     if not filename.endswith(".fsca"):
         filename += ".fsca"
     # remove any excess filename extenstions
